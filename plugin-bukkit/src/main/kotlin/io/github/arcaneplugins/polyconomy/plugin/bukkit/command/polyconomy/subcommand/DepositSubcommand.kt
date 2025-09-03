@@ -13,6 +13,7 @@ import io.github.arcaneplugins.polyconomy.plugin.bukkit.command.misc.args.Custom
 import io.github.arcaneplugins.polyconomy.plugin.bukkit.misc.PolyconomyPerm
 import kotlinx.coroutines.runBlocking
 import org.bukkit.OfflinePlayer
+import org.bukkit.command.CommandSender
 import java.util.function.Supplier
 
 object DepositSubcommand : InternalCmd {
@@ -39,8 +40,9 @@ object DepositSubcommand : InternalCmd {
                 if (amount <= 0) {
                     plugin.translations.commandGenericAmountZeroOrLess.sendTo(
                         sender, placeholders = mapOf(
-                        "amount" to Supplier { amount.toString() }
-                    ))
+                            "amount" to Supplier { amount.toString() }
+                        )
+                    )
                     throw plugin.translations.commandApiFailure()
                 }
 
@@ -72,6 +74,7 @@ object DepositSubcommand : InternalCmd {
                 }
                 val targetName = targetPlayer.name ?: targetPlayer.uniqueId.toString()
 
+                // Sender confirmation (existing behavior)
                 plugin.translations.commandPolyconomyDepositCompleted.sendTo(
                     sender, placeholders = mapOf(
                         "amount" to Supplier { amountFormatted },
@@ -79,6 +82,25 @@ object DepositSubcommand : InternalCmd {
                         "currency" to Supplier { currency.name },
                     )
                 )
+
+                // NEW: Recipient-facing notification if they're online
+                targetPlayer.player?.let { online ->
+                    val fromNameSupplier = senderNameSupplier(sender)
+                    plugin.translations.commandPolyconomyDepositReceived.sendTo(
+                        online,
+                        placeholders = mapOf(
+                            "amount" to Supplier { amountFormatted },
+                            "currency" to Supplier { currency.name },
+                            "from-name" to fromNameSupplier
+                        )
+                    )
+                }
             })
+    }
+
+    private fun senderNameSupplier(sender: CommandSender): Supplier<String> {
+        // Show the sender's name if it's a player; otherwise label as "Server"
+        val display = sender.name?.takeIf { it.isNotBlank() } ?: "Server"
+        return Supplier { display }
     }
 }
