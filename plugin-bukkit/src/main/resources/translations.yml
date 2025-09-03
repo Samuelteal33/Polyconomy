@@ -48,6 +48,8 @@ command:
         - "%prefix% &cError:&7 You can't afford a payment of amount &f%amount%&7 in currency &f%currency%&7; your balance is &f%balance%&7."
     success:
       - "%prefix% Paid &f%amount%&7 to &f%target-name%&7 in currency &f%currency%&7. They now have &f%target-balance%&7. Your new balance is &f%balance%&7."
+    received:
+      - "%prefix% You received &f%amount%&7 in &f%currency%&7 from &f%from-name%&7. New balance: &f%balance%&7."
   polyconomy:
     currency:
       register:
@@ -70,13 +72,15 @@ command:
     deposit:
       completed:
         - "%prefix% Deposited &f%amount%&7 into &f%target-name%&7's account in currency &f%currency%&7."
+      received:
+        - "%prefix% You received &f%amount%&7 in &f%currency%&7 from &f%from-name%&7."
     reset:
       completed:
         - "%prefix% Reset &f%target-name%&7's balance in currency &f%currency%&7; they now have &f%target-balance%&7."
     reload:
       error:
         generic:
-          - "%prefix% &cError:&7 An unexpected error occurred whilst reloading the plugin. Please check Console for more details. &fIf you have made changes to your configs, use a Online YAML Parser to check the syntax is correct.&7 Message: &8%message%"
+          - "%prefix% &cError:&7 An unexpected error occurred whilst reloading the plugin. Please check Console for more details. &fIf you have made changes to your configs, use a Online YAML Parser to check the syntax is correct.&7 Message: &8%message%."
       started:
         - "%prefix% Reloading..."
       completed:
