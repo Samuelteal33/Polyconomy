@@ -46,8 +46,9 @@ object PayCommand : InternalCmd {
                 if (amount <= 0) {
                     plugin.translations.commandGenericAmountZeroOrLess.sendTo(
                         sender, placeholders = mapOf(
-                        "amount" to Supplier { amount.toString() }
-                    ))
+                            "amount" to Supplier { amount.toString() }
+                        )
+                    )
                     throw plugin.translations.commandApiFailure()
                 }
 
@@ -71,10 +72,11 @@ object PayCommand : InternalCmd {
                 if (!canAfford) {
                     plugin.translations.commandPayErrorCantAfford.sendTo(
                         sender, placeholders = mapOf(
-                        "amount" to Supplier { amount.toString() },
-                        "balance" to Supplier { runBlocking { senderAccount.getBalance(currency).toString() } },
-                        "currency" to Supplier { currency.name }
-                    ))
+                            "amount" to Supplier { amount.toString() },
+                            "balance" to Supplier { runBlocking { senderAccount.getBalance(currency).toString() } },
+                            "currency" to Supplier { currency.name }
+                        )
+                    )
                     throw plugin.translations.commandApiFailure()
                 }
 
@@ -95,7 +97,7 @@ object PayCommand : InternalCmd {
                         importance = TransactionImportance.MEDIUM,
                     )
 
-                    // take money out of target's account
+                    // put money into target's account
                     targetAccount.deposit(
                         amount = amountBd,
                         currency = currency,
@@ -105,24 +107,42 @@ object PayCommand : InternalCmd {
                     )
                 }
 
+                // Format values for both players
                 val amountFmt = runBlocking {
-                    currency.format(amount.toBigDecimal(), plugin.settingsCfg.defaultLocale())
+                    currency.format(amountBd, plugin.settingsCfg.defaultLocale())
                 }
 
-                val newBalance = runBlocking {
+                val senderNewBalanceFmt = runBlocking {
                     currency.format(senderAccount.getBalance(currency), plugin.settingsCfg.defaultLocale())
                 }
 
+                val targetNewBalanceFmt = runBlocking {
+                    currency.format(targetAccount.getBalance(currency), plugin.settingsCfg.defaultLocale())
+                }
+
+                // Notify recipient if online
+                targetPlayer.player?.let { targetOnline ->
+                    plugin.translations.commandPayReceived.sendTo(
+                        targetOnline,
+                        placeholders = mapOf(
+                            "amount" to Supplier { amountFmt },
+                            "currency" to Supplier { currency.name },
+                            "from-name" to Supplier { sender.name },
+                            "balance" to Supplier { targetNewBalanceFmt }
+                        )
+                    )
+                }
+
+                // Acknowledge to sender (use formatted target balance)
                 plugin.translations.commandPaySuccess.sendTo(
                     sender, placeholders = mapOf(
                         "amount" to Supplier { amountFmt },
-                        "balance" to Supplier { newBalance },
+                        "balance" to Supplier { senderNewBalanceFmt },
                         "currency" to Supplier { currency.name },
                         "target-name" to Supplier { targetPlayer.name ?: targetPlayer.uniqueId.toString() },
-                        "target-balance" to Supplier { runBlocking { targetAccount.getBalance(currency).toString() } },
+                        "target-balance" to Supplier { targetNewBalanceFmt },
                     )
                 )
             })
     }
-
 }
