@@ -29,11 +29,10 @@ class TranslationHandlerImpl(
         defaultVal = defaultVal
     ) {
 
-        fun convertPapiPlaceholders(str: String, sender: CommandSender): String {
+        private fun convertPapiPlaceholders(str: String, sender: CommandSender): String {
             if (sender !is Player || !ClassUtil.isValidClasspath("me.clip.placeholderapi.PlaceholderAPI")) {
                 return str
             }
-
             return PlaceholderAPI.setPlaceholders(sender, str)
         }
 
@@ -56,7 +55,6 @@ class TranslationHandlerImpl(
                 )
             }
         }
-
     }
 
     fun load() {
@@ -65,16 +63,11 @@ class TranslationHandlerImpl(
 
     override fun placeholderify(str: String, placeholders: Map<String, Supplier<String>>): String {
         var strMut = str
-
-        for (pair in placeholders) {
-            val id: String = pair.key
-            val supplier: Supplier<String> = pair.value
-
+        for ((id, supplier) in placeholders) {
             if (strMut.contains(id)) {
                 strMut = strMut.replace("%${id}%", supplier.get())
             }
         }
-
         return strMut
     }
 
@@ -84,12 +77,13 @@ class TranslationHandlerImpl(
 
     private fun formatify(str: String, placeholders: Map<String, Supplier<String>>): Component {
         return MineDown.parse(
-            placeholderify(str, placeholders.plus("prefix" to Supplier { prefix.rawStr() }))
+            placeholderify(str, placeholders + ("prefix" to Supplier { prefix.rawStr() }))
         )
     }
 
     private lateinit var audiences: BukkitAudiences
 
+    // ===== Root + Common =====
     val listSeparator = TranslationImpl(
         this,
         arrayOf("list-separator"),
@@ -105,16 +99,20 @@ class TranslationHandlerImpl(
         arrayOf("command", "generic", "error", "command-failure"),
         listOf("err^")
     )
+
+    // ===== Balance =====
     val commandBalanceErrorNoPlayer = TranslationImpl(
         this,
         arrayOf("command", "balance", "error", "no-player"),
-        listOf("%prefix% Enter the username of the player you wish to check.")
+        listOf("%prefix% &cError:&7 Enter the username of the player you wish to check.")
     )
     val commandBalanceView = TranslationImpl(
         this,
         arrayOf("command", "balance", "view"),
         listOf("%prefix% Player &f%target-name%&7 has &f%balance%&7 (currency: &f%currency%&7)")
     )
+
+    // ===== Balancetop =====
     val commandBalancetopErrorPageTooLow = TranslationImpl(
         this,
         arrayOf("command", "balancetop", "error", "page-too-low"),
@@ -125,11 +123,15 @@ class TranslationHandlerImpl(
         arrayOf("command", "balancetop", "error", "already-searching"),
         listOf("%prefix% &cError:&7 You are already searching for the top balances; please wait for this search to complete.")
     )
-    val commandBalancetopProcessingRequqest = TranslationImpl(
+    val commandBalancetopProcessingRequest = TranslationImpl(
         this,
         arrayOf("command", "balancetop", "processing-request"),
         listOf("%prefix% Processing request...")
     )
+    // Alias for legacy/typo usage in BalancetopCommand.kt
+    val commandBalancetopProcessingRequqest: TranslationImpl
+        get() = commandBalancetopProcessingRequest
+
     val commandBalancetopHeader = TranslationImpl(
         this,
         arrayOf("command", "balancetop", "header"),
@@ -145,6 +147,8 @@ class TranslationHandlerImpl(
         arrayOf("command", "balancetop", "entry"),
         listOf("&8  %rank%.&f  %target-name%&7: &f%balance%")
     )
+
+    // ===== Generic Errors =====
     val commandGenericErrorUnknownCurrency = TranslationImpl(
         this,
         arrayOf("command", "generic", "error", "unknown-currency"),
@@ -160,15 +164,27 @@ class TranslationHandlerImpl(
         arrayOf("command", "generic", "error", "illformed-identifier"),
         listOf("Illformed identifier: ")
     )
-    val commandPayErrorNotYourself = TranslationImpl(
-        this,
-        arrayOf("command", "pay", "error", "not-yourself"),
-        listOf("%prefix% &cError:&7 You can't pay yourself.")
-    )
     val commandGenericAmountZeroOrLess = TranslationImpl(
         this,
         arrayOf("command", "generic", "error", "amount-zero-or-less"),
         listOf("%prefix% &cError:&7 Amount &f%amount%&7 is too low; it must be greater than &f0&7.")
+    )
+    val commandGenericNotYetImplemented = TranslationImpl(
+        this,
+        arrayOf("command", "generic", "error", "not-yet-implemented"),
+        listOf("%prefix% &cError:&7 Not yet implemented.")
+    )
+    val commandGenericErrorNotPlayedBefore = TranslationImpl(
+        this,
+        arrayOf("command", "generic", "error", "not-played-before"),
+        listOf("%prefix% &cError:&7 A player by that name has not played before.")
+    )
+
+    // ===== Pay =====
+    val commandPayErrorNotYourself = TranslationImpl(
+        this,
+        arrayOf("command", "pay", "error", "not-yourself"),
+        listOf("%prefix% &cError:&7 You can't pay yourself.")
     )
     val commandPayErrorCantAfford = TranslationImpl(
         this,
@@ -180,6 +196,13 @@ class TranslationHandlerImpl(
         arrayOf("command", "pay", "success"),
         listOf("%prefix% Paid &f%amount%&7 to &f%target-name%&7 in currency &f%currency%&7. They now have &f%target-balance%&7. Your new balance is &f%balance%&7.")
     )
+    val commandPayReceived = TranslationImpl(
+        this,
+        arrayOf("command", "pay", "received"),
+        listOf("%prefix% You received &f%amount%&7 in &f%currency%&7 from &f%from-name%&7. New balance: &f%balance%&7.")
+    )
+
+    // ===== Polyconomy: utilities / version =====
     val commandPolyconomySubroutineDbCleanupStart = TranslationImpl(
         this,
         arrayOf("command", "polyconomy", "subroutine", "db-cleanup", "start"),
@@ -204,11 +227,6 @@ class TranslationHandlerImpl(
         this,
         arrayOf("command", "polyconomy", "subroutine", "h2-server", "started"),
         listOf("%prefix% Started H2 debug web server. To stop the server, please restart your server.")
-    )
-    val commandGenericNotYetImplemented = TranslationImpl(
-        this,
-        arrayOf("command", "generic", "error", "not-yet-implemented"),
-        listOf("%prefix% &cError:&7 Not yet implemented.")
     )
     val commandPolyconomyCurrencyRegisterStarted = TranslationImpl(
         this,
@@ -243,11 +261,21 @@ class TranslationHandlerImpl(
             "%prefix% Consider making a different (new, if needed) currency a primary one so you can unregister &f%currency%&7."
         )
     )
+
+    // ===== Deposit =====
     val commandPolyconomyDepositCompleted = TranslationImpl(
         this,
         arrayOf("command", "polyconomy", "deposit", "completed"),
         listOf("%prefix% Deposited &f%amount%&7 into &f%target-name%&7's account in currency &f%currency%&7.")
     )
+    // Recipient-facing notification for admin/server deposits
+    val commandPolyconomyDepositReceived = TranslationImpl(
+        this,
+        arrayOf("command", "polyconomy", "deposit", "received"),
+        listOf("%prefix% You received &f%amount%&7 in &f%currency%&7 from &f%from-name%&7.")
+    )
+
+    // ===== Reload / Reset / Set / Version / Withdraw =====
     val commandPolyconomyReloadStarted = TranslationImpl(
         this,
         arrayOf("command", "polyconomy", "reload", "started"),
@@ -294,14 +322,8 @@ class TranslationHandlerImpl(
         arrayOf("command", "polyconomy", "withdraw", "completed"),
         listOf("%prefix% Withdrawn &f%amount%&7 from &f%target-name%&7's account in currency &f%currency%&7.")
     )
-    val commandGenericErrorNotPlayedBefore = TranslationImpl(
-        this,
-        arrayOf("command", "generic", "error", "not-played-before"),
-        listOf("%prefix% &cError:&7 A player by that name has not played before.")
-    )
 
     fun commandApiFailure(): Exception {
         return CommandAPI.failWithString(commandGenericErrorCommandFailure.rawStr())
     }
-
 }
